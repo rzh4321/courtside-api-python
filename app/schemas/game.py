@@ -1,36 +1,36 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional
 
 class GameResponse(BaseModel):
     id: int
-    game_id: str
-    home_team: str
-    away_team: str
+    game_id: Optional[str] = Field(alias="gameId")
+    home_team: str = Field(alias="homeTeam")
+    away_team: str = Field(alias="awayTeam")
     
     # spread fields
-    home_spread_odds: Optional[Decimal]
-    away_spread_odds: Optional[Decimal]
-    home_spread: Optional[Decimal]
-    opening_home_spread: Decimal
-    home_moneyline: Optional[Decimal]
-    away_moneyline: Optional[Decimal]
+    home_spread_odds: Optional[Decimal] = Field(alias="homeSpreadOdds")
+    away_spread_odds: Optional[Decimal] = Field(alias="awaySpreadOdds")
+    home_spread: Optional[Decimal] = Field(alias="homeSpread")
+    opening_home_spread: Decimal = Field(alias="openingHomeSpread")
+    home_moneyline: Optional[Decimal] = Field(alias="homeMoneyline")
+    away_moneyline: Optional[Decimal] = Field(alias="awayMoneyline")
     
     # over/under fields
-    opening_over_under: Decimal
-    over_under: Optional[Decimal]
-    over_odds: Optional[Decimal]
-    under_odds: Optional[Decimal]
+    opening_over_under: Decimal = Field(alias="openingOverUnder")
+    over_under: Optional[Decimal] = Field(alias="overUnder")
+    over_odds: Optional[Decimal] = Field(alias="overOdds")
+    under_odds: Optional[Decimal] = Field(alias="underOdds")
     
-    created_at: datetime
-    updated_at: datetime
-    game_date: date
-    has_ended: bool
+    created_at: datetime = Field(alias="createdAt")
+    updated_at: datetime = Field(alias="updatedAt")
+    game_date: date = Field(alias="gameDate")
+    has_ended: bool = Field(alias="hasEnded")
 
     class Config:
-        orm_mode = True  # Allows Pydantic to read data from ORM objects
-        # convert to camel case
+        orm_mode = True
+        populate_by_name = True  # This allows population using the field names
         alias_generator = lambda string: ''.join(
             word if i == 0 else word.capitalize()
             for i, word in enumerate(string.split('_'))

@@ -1,8 +1,9 @@
 from enum import Enum
-from sqlalchemy import Column, BigInteger, String, Numeric, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, BigInteger, String, Numeric, DateTime, func, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.base import Base
+from app.models.user import User
 
 
 class BetType(str, Enum):
@@ -33,7 +34,8 @@ class Bet(Base):
     
     placed_at = Column(
         DateTime(timezone=True),
-        default=datetime.now(datetime.timezone.utc)
+        server_default=func.now(),
+        nullable=False
     )
     status = Column(
         String(20),

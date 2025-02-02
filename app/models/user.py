@@ -14,8 +14,8 @@ class User(Base):
     
     created_at = Column(
         DateTime(timezone=True),
-        nullable=False,
-        default=datetime.now(datetime.timezone.utc)
+        server_default=func.now(),
+        nullable=False
     )
     
     amount_deposited = Column(BigInteger, default=0, nullable=False)

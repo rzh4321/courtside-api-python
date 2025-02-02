@@ -2,6 +2,7 @@ from sqlalchemy import Column, BigInteger, String, Numeric, DateTime, Date, func
 from sqlalchemy.orm import relationship
 from datetime import datetime, date
 from app.db.base import Base
+from app.models.bet import Bet
 
 
 class Game(Base):
