@@ -30,7 +30,6 @@ class Bet(Base):
     odds = Column(Numeric(6, 2), nullable=False)
     amount_placed = Column(Numeric(10, 2), nullable=False)
     total_payout = Column(Numeric(10, 2), nullable=False)
-    selected_line = Column(Numeric(5, 2))
     
     placed_at = Column(
         DateTime(timezone=True),

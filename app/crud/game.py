@@ -48,6 +48,4 @@ class GameCRUD:
         game = GameCRUD.get_by_teams_and_date(db, home_team, away_team, game_date)
         if game:
             game.game_id = game_id
-            db.commit()
-            db.refresh(game)
         return game

@@ -4,7 +4,7 @@ from sqlalchemy import text
 from app.db.session import get_db
 from app.db.base import Base
 from app.db.session import engine
-from app.api.v1.endpoints import games
+from app.api.v1.endpoints import games, auth, bets
 import logging
 
 # Configure logging
@@ -15,6 +15,9 @@ app = FastAPI(title="NBA Courtside")
 
 # Include routers
 app.include_router(games.router, prefix="/api/games", tags=["games"])
+app.include_router(bets.router, prefix="/api/bets", tags=["bets"])
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+
 
 # test endpoint to verify database connection
 @app.get("/test-db")

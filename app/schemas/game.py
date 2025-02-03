@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional
+from pydantic.alias_generators import to_camel
 
 class GameResponse(BaseModel):
     id: int
@@ -31,10 +32,6 @@ class GameResponse(BaseModel):
     class Config:
         orm_mode = True
         populate_by_name = True  # This allows population using the field names
-        alias_generator = lambda string: ''.join(
-            word if i == 0 else word.capitalize()
-            for i, word in enumerate(string.split('_'))
-        )
 
 class GameIdUpdateRequest(BaseModel):
     home_team: str
@@ -43,12 +40,8 @@ class GameIdUpdateRequest(BaseModel):
     game_id: str
 
     class Config:
-        # Convert snake_case to camelCase
-        alias_generator = lambda string: ''.join(
-            word if i == 0 else word.capitalize()
-            for i, word in enumerate(string.split('_'))
-        )
         # Allow both snake_case and camelCase when creating objects
+        alias_generator= to_camel
         populate_by_name = True
         # Example for API documentation
         json_schema_extra = {
