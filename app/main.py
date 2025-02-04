@@ -6,12 +6,29 @@ from app.db.base import Base
 from app.db.session import engine
 from app.api.v1.endpoints import games, auth, bets
 import logging
+from fastapi.middleware.cors import CORSMiddleware
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://nba-courtside.vercel.app",
+    "http://52.15.214.190",
+    "https://52.15.214.190"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include routers
 app.include_router(games.router, prefix="/api/games", tags=["games"])

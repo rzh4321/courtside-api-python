@@ -43,7 +43,6 @@ def get_game_by_teams(
     try:
         logger.info(f"IN FIND BY TEAMS. {home_team} AT {away_team} ON {game_date}")
         date_obj = datetime.strptime(game_date, "%Y-%m-%d")
-        date_obj = date_obj.replace(tzinfo=timezone.utc)
         
         game = GameCRUD.get_by_teams_and_date(db, home_team, away_team, date_obj)
         if not game:

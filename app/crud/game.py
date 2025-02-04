@@ -28,7 +28,7 @@ class GameCRUD:
         away_team: str, 
         game_date: datetime
     ) -> Optional[Game]:
-        logger.info(f"Finding game: {home_team} AT {away_team} ON {game_date}")
+        print(f"Finding game: {home_team} AT {away_team} ON {game_date}")
         return db.query(Game).filter(
             and_(
                 Game.home_team == home_team,
