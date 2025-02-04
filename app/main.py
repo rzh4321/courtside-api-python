@@ -11,7 +11,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="NBA Courtside")
+app = FastAPI()
 
 # Include routers
 app.include_router(games.router, prefix="/api/games", tags=["games"])
