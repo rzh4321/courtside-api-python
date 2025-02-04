@@ -34,15 +34,13 @@ class PlaceBetRequest(BaseModel):
 class BetResponse(BaseModel):
     id: int
     user_id: int = Field(alias="userId")
-    game_id: str = Field(alias="gameId")
+    game_id: int = Field(alias="gameId")
     bet_type: BetType = Field(alias="betType")
     odds: Decimal
     amount_placed: Decimal = Field(alias="amountPlaced")
     total_payout: Decimal = Field(alias="totalPayout")
     placed_at: datetime = Field(alias="placedAt")
     status: str
-    home_team: str = Field(alias="homeTeam")
-    away_team: str = Field(alias="awayTeam")
 
     class Config:
         alias_generator= to_camel

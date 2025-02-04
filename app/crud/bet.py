@@ -25,7 +25,7 @@ class BetCRUD:
         # Create bet
         bet = Bet(
             user_id=user_id,
-            game_id=request.game_id,
+            game_id=game.id,
             bet_type=request.bet_type,
             amount_placed=request.amount_to_place,
             odds=request.odds,
@@ -34,16 +34,15 @@ class BetCRUD:
 
         # Calculate odds and payout
         BetCRUD._calculate_odds_and_payout(bet)
-
         # Update user statistics
         user = db.query(User).filter(User.id == user_id).first()
         if user:
             user.amount_placed = (user.amount_placed or 0) + float(request.amount_to_place)
             user.bets_placed = (user.bets_placed or 0) + 1
-
-        # db.add(bet)
-        # db.commit()
-        # db.refresh(bet)
+        # need these to automatically populate the id and placed_at columns
+        db.add(bet)
+        db.commit()
+        db.refresh(bet)
         return bet
 
     @staticmethod

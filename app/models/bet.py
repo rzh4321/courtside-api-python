@@ -6,6 +6,7 @@ from app.db.base import Base
 from app.models.user import User
 
 
+
 class BetType(str, Enum):
     SPREAD_HOME = "SPREAD_HOME"
     SPREAD_AWAY = "SPREAD_AWAY"
@@ -18,9 +19,10 @@ class BetType(str, Enum):
 class Bet(Base):
     __tablename__ = 'bets'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, index=True)
     
     user_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
+    # the PK of game, not game's game_id column
     game_id = Column(BigInteger, ForeignKey('games.id'), nullable=False)
     
     user = relationship("User", back_populates="bets")
@@ -41,6 +43,7 @@ class Bet(Base):
         default="PENDING",
         nullable=False
     )
+
 
     def __repr__(self):
         return (
