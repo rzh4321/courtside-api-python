@@ -31,6 +31,7 @@ class GameResponse(BaseModel):
 
     class Config:
         orm_mode = True
+        from_attributes = True
         populate_by_name = True  # This allows population using the field names
 
 class GameIdUpdateRequest(BaseModel):
