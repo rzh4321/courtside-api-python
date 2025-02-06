@@ -29,6 +29,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 data = await websocket.receive_text()
         except WebSocketDisconnect:
             await odds_manager.disconnect(websocket)
+        except Exception as e:
+            print(f"Error during WebSocket communication: {str(e)}")
+            await odds_manager.disconnect(websocket)
     except Exception as e:
         print(f"Error in websocket endpoint: {str(e)}")
         if not websocket.client_state.disconnected:
