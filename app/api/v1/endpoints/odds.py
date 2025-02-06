@@ -25,12 +25,12 @@ async def update_odds(request: UpdateOddsRequest, db: Session = Depends(get_db))
         # Broadcast update to all connected clients
         await odds_manager.broadcast_odds_update(
             game_id=request.game_id,
-            game_data=game_data.dict(by_alias=True)  # Convert to dict with aliased field names
+            game_data=game_data.model_dump(by_alias=True)  # Convert to dict with aliased field names
         )
     
     return {"status": "success"}
 
-@router.post("/update-odds-by-teams/{home_team}/{away_team}/{game_date}")
+@router.post("/notify-odds-by-teams")
 async def update_odds_by_teams(
     request: UpdateOddsByTeamsRequest,
     db: Session = Depends(get_db)
@@ -38,14 +38,16 @@ async def update_odds_by_teams(
     print(f'IN NOTIFY ODDS BY TEAMS: {request.away_team} AT {request.home_team} ON {request.game_date}')
     if request.away_team and request.home_team and request.game_date:
         date_obj = datetime.strptime(request.game_date, "%Y-%m-%d")
-        updated_game = db.query(Game).filter(request.away_team == Game.away_team, request.home_team == Game.home_team, date_obj == Game.game_date)
+        game_model = db.query(Game).filter(request.away_team == Game.away_team, request.home_team == Game.home_team, date_obj == Game.game_date).first()
+        # Convert SQLAlchemy model to Pydantic model
+        game_data = GameResponse.model_validate(game_model)
         print(f'TEAMS AND GAME DATE NOT NULL, BROADCASTING TO REACT...')
         # Broadcast update to all connected clients
         await odds_manager.broadcast_odds_update_by_teams(
             home_team=request.home_team,
             away_team=request.away_team,
             game_date=request.game_date,
-            game_data=updated_game
+            game_data=game_data.model_dump(by_alias=True)
         )
     
     return {"status": "success"}
