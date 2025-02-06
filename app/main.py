@@ -8,6 +8,8 @@ from app.api.v1.endpoints import games, auth, bets, websocket, odds
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 
+
+# uvicorn app.main:app --reload
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,6 +30,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    allow_websockets=True
 )
 
 # Include routers
