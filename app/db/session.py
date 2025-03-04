@@ -11,15 +11,12 @@ SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     pool_pre_ping=True,  # Enable connection pool "pre-ping" feature
-    pool_size=5,         # Number of connections to keep open
-    max_overflow=10      # Max number of connections to create above pool_size
+    pool_size=5,  # Number of connections to keep open
+    max_overflow=10,  # Max number of connections to create above pool_size
 )
 
-SessionLocal = sessionmaker(
-    bind=engine,
-    autocommit=False,
-    autoflush=False
-)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+
 
 def get_db():
     db = SessionLocal()

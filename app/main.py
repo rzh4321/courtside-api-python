@@ -21,7 +21,7 @@ origins = [
     "http://localhost:3001",
     "https://nba-courtside.vercel.app",
     "http://52.15.214.190",
-    "https://52.15.214.190"
+    "https://52.15.214.190",
 ]
 
 app.add_middleware(

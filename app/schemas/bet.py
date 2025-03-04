@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Optional
 from pydantic.alias_generators import to_camel
 
+
 class BetType(str, Enum):
     SPREAD_HOME = "SPREAD_HOME"
     SPREAD_AWAY = "SPREAD_AWAY"
@@ -13,6 +14,7 @@ class BetType(str, Enum):
     OVER = "OVER"
     UNDER = "UNDER"
 
+
 class PlaceBetRequest(BaseModel):
     game_id: str = Field(alias="gameId")
     bet_type: BetType = Field(alias="betType")
@@ -20,16 +22,17 @@ class PlaceBetRequest(BaseModel):
     odds: Decimal
 
     class Config:
-        alias_generator= to_camel
+        alias_generator = to_camel
         populate_by_name = True
         json_schema_extra = {
             "example": {
                 "gameId": "0112102",
                 "betType": "SPREAD_HOME",
                 "amountToPlace": 100.00,
-                "odds": -110
+                "odds": -110,
             }
         }
+
 
 class BetResponse(BaseModel):
     id: int
@@ -43,6 +46,6 @@ class BetResponse(BaseModel):
     status: str
 
     class Config:
-        alias_generator= to_camel
+        alias_generator = to_camel
         from_attributes = True
         populate_by_name = True

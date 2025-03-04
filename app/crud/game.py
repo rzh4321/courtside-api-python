@@ -7,10 +7,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class GameCRUD:
     @staticmethod
     def get_all(db: Session) -> List[Game]:
-        res =  db.query(Game).all()
+        res = db.query(Game).all()
         return res
 
     @staticmethod
@@ -23,27 +24,24 @@ class GameCRUD:
 
     @staticmethod
     def get_by_teams_and_date(
-        db: Session, 
-        home_team: str, 
-        away_team: str, 
-        game_date: datetime
+        db: Session, home_team: str, away_team: str, game_date: datetime
     ) -> Optional[Game]:
         print(f"Finding game: {home_team} AT {away_team} ON {game_date}")
-        return db.query(Game).filter(
-            and_(
-                Game.home_team == home_team,
-                Game.away_team == away_team,
-                Game.game_date == game_date
+        return (
+            db.query(Game)
+            .filter(
+                and_(
+                    Game.home_team == home_team,
+                    Game.away_team == away_team,
+                    Game.game_date == game_date,
+                )
             )
-        ).first()
+            .first()
+        )
 
     @staticmethod
     def update_game_id(
-        db: Session,
-        home_team: str,
-        away_team: str,
-        game_date: datetime,
-        game_id: str
+        db: Session, home_team: str, away_team: str, game_date: datetime, game_id: str
     ) -> Optional[Game]:
         game = GameCRUD.get_by_teams_and_date(db, home_team, away_team, game_date)
         if game:

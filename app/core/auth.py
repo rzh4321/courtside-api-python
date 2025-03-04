@@ -9,9 +9,9 @@ from typing import Optional
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
 
+
 async def get_current_user(
-    db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
+    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -25,7 +25,7 @@ async def get_current_user(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    
+
     user = get_user_by_username(db, username)
     if user is None:
         raise credentials_exception

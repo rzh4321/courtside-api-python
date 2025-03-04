@@ -10,10 +10,12 @@ import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 @router.get("", response_model=List[GameResponse])
 def get_all_games(db: Session = Depends(get_db)):
     games = GameCRUD.get_all(db)
     return games
+
 
 @router.get("/date/{date}", response_model=List[GameResponse])
 def get_games_by_date(date: str, db: Session = Depends(get_db)):
@@ -26,24 +28,27 @@ def get_games_by_date(date: str, db: Session = Depends(get_db)):
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format")
 
+
 @router.get("/{game_id}", response_model=GameResponse)
 def get_game_by_id(game_id: str, db: Session = Depends(get_db)):
     game = GameCRUD.get_by_game_id(db, game_id)
     if not game:
-        raise HTTPException(status_code=404, detail=f"Game not found with id: {game_id}")
+        raise HTTPException(
+            status_code=404, detail=f"Game not found with id: {game_id}"
+        )
     return game
 
-@router.get("/by-teams/{home_team}/{away_team}/{game_date}", response_model=GameResponse)
+
+@router.get(
+    "/by-teams/{home_team}/{away_team}/{game_date}", response_model=GameResponse
+)
 def get_game_by_teams(
-    home_team: str,
-    away_team: str,
-    game_date: str,
-    db: Session = Depends(get_db)
+    home_team: str, away_team: str, game_date: str, db: Session = Depends(get_db)
 ):
     try:
         logger.info(f"IN FIND BY TEAMS. {home_team} AT {away_team} ON {game_date}")
         date_obj = datetime.strptime(game_date, "%Y-%m-%d")
-        
+
         game = GameCRUD.get_by_teams_and_date(db, home_team, away_team, date_obj)
         if not game:
             raise HTTPException(status_code=404, detail="Game not found")
@@ -51,15 +56,12 @@ def get_game_by_teams(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format")
 
+
 @router.put("/set-game-id", response_model=GameResponse)
 def set_game_id(request: GameIdUpdateRequest, db: Session = Depends(get_db)):
-    try:       
+    try:
         game = GameCRUD.update_game_id(
-            db,
-            request.home_team,
-            request.away_team,
-            request.game_date,
-            request.game_id
+            db, request.home_team, request.away_team, request.game_date, request.game_id
         )
         if not game:
             raise HTTPException(status_code=404, detail="Game not found")

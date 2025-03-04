@@ -9,20 +9,21 @@ ALLOWED_ORIGINS = [
     "http://localhost:3001",
     "https://nba-courtside.vercel.app",
     "http://52.15.214.190",
-    "https://52.15.214.190"
+    "https://52.15.214.190",
 ]
+
 
 @router.websocket("/ws/odds")
 async def websocket_endpoint(websocket: WebSocket):
     try:
         client_origin = websocket.headers.get("origin")
         print(f"Incoming WebSocket connection from origin: {client_origin}")
-        
+
         if client_origin not in ALLOWED_ORIGINS:
             print(f"Rejected connection from unauthorized origin: {client_origin}")
             await websocket.close(code=1008, reason="Not allowed")
             return
-            
+
         await odds_manager.connect(websocket)
         try:
             while True:

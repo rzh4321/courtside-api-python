@@ -7,13 +7,16 @@ from app.models.user import User
 from app.schemas.bet import PlaceBetRequest
 from fastapi import HTTPException
 
+
 class BetCRUD:
     @staticmethod
     def get_user_bets(db: Session, user_id: int) -> list[Bet]:
-        return db.query(Bet)\
-            .filter(Bet.user_id == user_id)\
-            .order_by(Bet.placed_at.desc())\
+        return (
+            db.query(Bet)
+            .filter(Bet.user_id == user_id)
+            .order_by(Bet.placed_at.desc())
             .all()
+        )
 
     @staticmethod
     def create_bet(db: Session, user_id: int, request: PlaceBetRequest) -> Bet:
@@ -29,7 +32,7 @@ class BetCRUD:
             bet_type=request.bet_type,
             amount_placed=request.amount_to_place,
             odds=request.odds,
-            status="PENDING"
+            status="PENDING",
         )
 
         # Calculate odds and payout
@@ -37,7 +40,9 @@ class BetCRUD:
         # Update user statistics
         user = db.query(User).filter(User.id == user_id).first()
         if user:
-            user.amount_placed = (user.amount_placed or 0) + float(request.amount_to_place)
+            user.amount_placed = (user.amount_placed or 0) + float(
+                request.amount_to_place
+            )
             user.bets_placed = (user.bets_placed or 0) + 1
         # need these to automatically populate the id and placed_at columns
         db.add(bet)
@@ -58,6 +63,6 @@ class BetCRUD:
 
         # Calculate total payout
         total_payout = amount_placed * Decimal(str(decimal_odds))
-        total_payout = total_payout.quantize(Decimal('.01'))
+        total_payout = total_payout.quantize(Decimal(".01"))
 
         bet.total_payout = total_payout
