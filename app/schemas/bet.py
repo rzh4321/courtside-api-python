@@ -20,6 +20,7 @@ class PlaceBetRequest(BaseModel):
     bet_type: BetType = Field(alias="betType")
     amount_to_place: Decimal = Field(alias="amountToPlace")
     odds: Decimal
+    betting_line: Optional[Decimal] = Field(None, alias="bettingLine")
 
     class Config:
         alias_generator = to_camel
@@ -30,6 +31,7 @@ class PlaceBetRequest(BaseModel):
                 "betType": "SPREAD_HOME",
                 "amountToPlace": 100.00,
                 "odds": -110,
+                "bettingLine": 12.5
             }
         }
 

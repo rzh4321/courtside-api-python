@@ -33,6 +33,7 @@ class BetCRUD:
             amount_placed=request.amount_to_place,
             odds=request.odds,
             status="PENDING",
+            betting_line=request.betting_line
         )
 
         # Calculate odds and payout
