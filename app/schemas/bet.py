@@ -31,7 +31,7 @@ class PlaceBetRequest(BaseModel):
                 "betType": "SPREAD_HOME",
                 "amountToPlace": 100.00,
                 "odds": -110,
-                "bettingLine": 12.5
+                "bettingLine": 12.5,
             }
         }
 

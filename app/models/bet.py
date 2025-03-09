@@ -45,7 +45,7 @@ class Bet(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     status = Column(String(20), default="PENDING", nullable=False)
-    betting_line=Column(Numeric(10,2))
+    betting_line = Column(Numeric(10, 2))
 
     def __repr__(self):
         return (

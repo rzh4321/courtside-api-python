@@ -12,6 +12,7 @@ class UserResponse(BaseModel):
     amount_won: int
     bets_placed: int
     bets_won: int
+    balance: int
 
     class Config:
         # need this to validate User sqlalchemy object

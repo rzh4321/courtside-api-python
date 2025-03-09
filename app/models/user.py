@@ -17,6 +17,7 @@ class User(Base):
     )
 
     amount_deposited = Column(BigInteger, default=0, nullable=False)
+    balance = Column(BigInteger, default=0, nullable=False)
     amount_placed = Column(BigInteger, default=0, nullable=False)
     amount_won = Column(BigInteger, default=0, nullable=False)
     bets_placed = Column(BigInteger, default=0, nullable=False)

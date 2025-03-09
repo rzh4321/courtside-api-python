@@ -22,8 +22,11 @@ class BetCRUD:
     def create_bet(db: Session, user_id: int, request: PlaceBetRequest) -> Bet:
         # Fetch game
         game = db.query(Game).filter(Game.game_id == request.game_id).first()
+        user = db.query(User).filter(User.id == user_id).first()
         if not game:
             raise HTTPException(status_code=404, detail="Game not found")
+        if request.amount_to_place > user.balance:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
 
         # Create bet
         bet = Bet(
@@ -33,18 +36,18 @@ class BetCRUD:
             amount_placed=request.amount_to_place,
             odds=request.odds,
             status="PENDING",
-            betting_line=request.betting_line
+            betting_line=request.betting_line,
         )
 
         # Calculate odds and payout
         BetCRUD._calculate_odds_and_payout(bet)
         # Update user statistics
-        user = db.query(User).filter(User.id == user_id).first()
         if user:
             user.amount_placed = (user.amount_placed or 0) + float(
                 request.amount_to_place
             )
             user.bets_placed = (user.bets_placed or 0) + 1
+            user.balance = user.balance - request.amount_to_place
         # need these to automatically populate the id and placed_at columns
         db.add(bet)
         db.commit()
