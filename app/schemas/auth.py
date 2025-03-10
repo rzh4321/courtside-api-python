@@ -7,12 +7,12 @@ class UserResponse(BaseModel):
     id: int
     username: str
     created_at: datetime
-    amount_deposited: int
-    amount_placed: int
-    amount_won: int
+    amount_deposited: float
+    amount_placed: float
+    amount_won: float
     bets_placed: int
     bets_won: int
-    balance: int
+    balance: float
 
     class Config:
         # need this to validate User sqlalchemy object
