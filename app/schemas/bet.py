@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Optional, List, Literal
 from pydantic.alias_generators import to_camel
 
 
@@ -51,3 +51,144 @@ class BetResponse(BaseModel):
         alias_generator = to_camel
         from_attributes = True
         populate_by_name = True
+
+
+class Period(BaseModel):
+    period: int
+    periodType: str
+    score: int
+
+
+class PlayerStatistics(BaseModel):
+    assists: int
+    blocks: int
+    blocksReceived: int
+    fieldGoalsAttempted: int
+    fieldGoalsMade: int
+    fieldGoalsPercentage: float
+    foulsOffensive: int
+    foulsDrawn: int
+    foulsPersonal: int
+    foulsTechnical: int
+    freeThrowsAttempted: int
+    freeThrowsMade: int
+    freeThrowsPercentage: float
+    minus: int
+    minutes: str
+    minutesCalculated: str
+    plus: int
+    plusMinusPoints: int
+    points: int
+    pointsFastBreak: int
+    pointsInThePaint: int
+    pointsSecondChance: int
+    reboundsDefensive: int
+    reboundsOffensive: int
+    reboundsTotal: int
+    steals: int
+    threePointersAttempted: int
+    threePointersMade: int
+    threePointersPercentage: float
+    turnovers: int
+    twoPointersAttempted: int
+    twoPointersMade: int
+    twoPointersPercentage: float
+
+
+class Player(BaseModel):
+    status: Literal["ACTIVE", "INACTIVE"]
+    order: int
+    personId: int
+    jerseyNum: str
+    position: Optional[str] = None
+    starter: str
+    oncourt: str
+    played: str
+    statistics: PlayerStatistics
+    name: str
+    nameI: str
+    firstName: str
+    familyName: str
+    notPlayingReason: Optional[str] = None
+    notPlayingDescription: Optional[str] = None
+
+
+class TeamStatistics(BaseModel):
+    assists: int
+    assistsTurnoverRatio: float
+    benchPoints: int
+    biggestLead: int
+    biggestLeadScore: str
+    biggestScoringRun: int
+    biggestScoringRunScore: str
+    blocks: int
+    blocksReceived: int
+    fastBreakPointsAttempted: int
+    fastBreakPointsMade: int
+    fastBreakPointsPercentage: float
+    fieldGoalsAttempted: int
+    fieldGoalsEffectiveAdjusted: float
+    fieldGoalsMade: int
+    fieldGoalsPercentage: float
+    foulsOffensive: int
+    foulsDrawn: int
+    foulsPersonal: int
+    foulsTeam: int
+    foulsTechnical: int
+    foulsTeamTechnical: int
+    freeThrowsAttempted: int
+    freeThrowsMade: int
+    freeThrowsPercentage: float
+    leadChanges: int
+    minutes: str
+    minutesCalculated: str
+    points: int
+    pointsAgainst: int
+    pointsFastBreak: int
+    pointsFromTurnovers: int
+    pointsInThePaint: int
+    pointsInThePaintAttempted: int
+    pointsInThePaintMade: int
+    pointsInThePaintPercentage: float
+    pointsSecondChance: int
+    reboundsDefensive: int
+    reboundsOffensive: int
+    reboundsPersonal: int
+    reboundsTeam: int
+    reboundsTeamDefensive: int
+    reboundsTeamOffensive: int
+    reboundsTotal: int
+    secondChancePointsAttempted: int
+    secondChancePointsMade: int
+    secondChancePointsPercentage: float
+    steals: int
+    threePointersAttempted: int
+    threePointersMade: int
+    threePointersPercentage: float
+    timeLeading: str
+    timesTied: int
+    trueShootingAttempts: float
+    trueShootingPercentage: float
+    turnovers: int
+    turnoversTeam: int
+    turnoversTotal: int
+    twoPointersAttempted: int
+    twoPointersMade: int
+    twoPointersPercentage: float
+
+
+class Team(BaseModel):
+    teamId: int
+    teamName: str
+    teamCity: str
+    teamTricode: str
+    teamSlug: str
+    wins: int
+    losses: int
+    score: int
+    seed: int
+    inBonus: None = None
+    timeoutsRemaining: int
+    periods: List[Period]
+    players: List[Player]
+    statistics: TeamStatistics

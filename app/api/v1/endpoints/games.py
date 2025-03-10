@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime, timezone
 from app.db.session import get_db
 from app.crud.game import GameCRUD
-from app.schemas.game import GameResponse, GameIdUpdateRequest
+from app.schemas.game import GameResponse, GameIdUpdateRequest, ProcessResponse
 import logging
 
 router = APIRouter()
@@ -68,3 +68,27 @@ def set_game_id(request: GameIdUpdateRequest, db: Session = Depends(get_db)):
         return game
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format")
+
+
+@router.post("/{game_id}/process", response_model=ProcessResponse)
+async def process_game(game_id: str, db: Session = Depends(get_db)):
+    logger.info(f"IN PROCESS GAME. GAME ID IS {game_id}")
+    try:
+        game = await GameCRUD.process_game(db, game_id)
+        if game is None:
+            raise HTTPException(
+                status_code=404, detail="Game not found or game did not end"
+            )
+
+        return {
+            "success": True,
+            "message": "Game processed successfully",
+            "game_id": game_id,
+        }
+    except Exception as e:
+        logger.error(f"Error processing game {game_id}: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Failed to process game: {str(e)}",
+            "game_id": game_id,
+        }

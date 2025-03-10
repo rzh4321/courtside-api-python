@@ -4,8 +4,11 @@ from datetime import datetime
 from app.models.bet import Bet
 from app.models.game import Game
 from app.models.user import User
-from app.schemas.bet import PlaceBetRequest
+from app.schemas.bet import PlaceBetRequest, Team
 from fastapi import HTTPException
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BetCRUD:
@@ -52,6 +55,90 @@ class BetCRUD:
         db.add(bet)
         db.commit()
         db.refresh(bet)
+        return bet
+
+    @staticmethod
+    def process_bet(db: Session, bet: Bet, home_team: Team, away_team: Team) -> Bet:
+        logger.info(f"\nPROCESSING BET {bet}")
+        away_team_name = away_team["teamCity"] + away_team["teamName"]
+        home_team_name = home_team["teamCity"] + home_team["teamName"]
+        away_team_score = away_team["score"]
+        home_team_score = home_team["score"]
+        total_score = away_team_score + home_team_score
+
+        logger.info(
+            f"THE GAME IS {away_team_name} AT {home_team_name}, {away_team_score} - {home_team_score}. TOTAL IS {total_score}"
+        )
+        user = db.query(User).filter(User.id == bet.user_id).first()
+        logger.info(f"THIS WAS PLACED BY USER {user}")
+
+        bet_won = False
+
+        if bet.bet_type == "SPREAD_HOME":
+            logger.info(f"IT BET ON SPREAD HOME, {home_team_name} {bet.betting_line}")
+
+            if (
+                bet.betting_line > 0
+                and home_team_score + bet.betting_line > away_team_score
+            ) or (
+                bet.betting_line < 0
+                and home_team_score - away_team_score >= abs(bet.betting_line)
+            ):
+                logger.info("HOME TEAM COVERED SPREAD")
+                bet_won = True
+
+        elif bet.bet_type == "SPREAD_AWAY":
+            logger.info(f"IT BET ON SPREAD AWAY, {away_team_name} {bet.betting_line}")
+
+            if (
+                bet.betting_line > 0
+                and away_team_score + bet.betting_line > home_team_score
+            ) or (
+                bet.betting_line < 0
+                and away_team_score - home_team_score >= abs(bet.betting_line)
+            ):
+                logger.info("AWAY TEAM COVERED SPREAD")
+                bet_won = True
+
+        elif bet.bet_type == "OVER":
+            logger.info(f"IT BET ON OVER {bet.betting_line}")
+
+            if total_score > bet.betting_line:
+                logger.info(f"OVER HIT: {total_score} > {bet.betting_line}")
+                bet_won = True
+
+        elif bet.bet_type == "UNDER":
+            logger.info(f"IT BET ON UNDER {bet.betting_line}")
+
+            if total_score < bet.betting_line:
+                logger.info(f"UNDER HIT: {total_score} < {bet.betting_line}")
+                bet_won = True
+
+        elif bet.bet_type == "MONEYLINE_HOME":
+            logger.info(f"IT BET ON MONEYLINE HOME, {home_team_name}")
+
+            if home_team_score > away_team_score:
+                logger.info(f"HOME TEAM WON STRAIGHT UP")
+                bet_won = True
+
+        elif bet.bet_type == "MONEYLINE_AWAY":
+            logger.info(f"IT BET ON MONEYLINE AWAY, {away_team_name}")
+
+            if away_team_score > home_team_score:
+                logger.info(f"AWAY TEAM WON STRAIGHT UP")
+                bet_won = True
+
+        # Process winning bet
+        if bet_won:
+            user.amount_won += bet.total_payout
+            user.bets_won += 1
+            user.balance += bet.total_payout
+            bet.status = "WON"
+            logger.info(f"BET WON: User {user.id} won {bet.total_payout}")
+        else:
+            bet.status = "LOST"
+            logger.info(f"BET LOST: {bet.bet_type}")
+
         return bet
 
     @staticmethod

@@ -55,3 +55,9 @@ class GameIdUpdateRequest(BaseModel):
                 "gameId": "0112102",
             }
         }
+
+
+class ProcessResponse(BaseModel):
+    success: bool
+    message: str
+    game_id: str
