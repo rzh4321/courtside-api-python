@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from decimal import Decimal
 from datetime import datetime
 from app.models.bet import Bet
@@ -23,8 +24,23 @@ class BetCRUD:
 
     @staticmethod
     def create_bet(db: Session, user_id: int, request: PlaceBetRequest) -> Bet:
-        # Fetch game
-        game = db.query(Game).filter(Game.game_id == request.game_id).first()
+        # Fetch game from game_id, if given
+        if request.game_id:
+            game = db.query(Game).filter(Game.game_id == request.game_id).first()
+        else:
+            # game_id is not given, so team names and game date must be given
+            date_obj = datetime.strptime(request.game_date, "%Y-%m-%d")
+            game = (
+                db.query(Game)
+                .filter(
+                    and_(
+                        Game.home_team == request.home_team,
+                        Game.away_team == request.away_team,
+                        Game.game_date == date_obj,
+                    )
+                )
+                .first()
+            )
         user = db.query(User).filter(User.id == user_id).first()
         if not game:
             raise HTTPException(status_code=404, detail="Game not found")

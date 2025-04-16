@@ -16,11 +16,14 @@ class BetType(str, Enum):
 
 
 class PlaceBetRequest(BaseModel):
-    game_id: str = Field(alias="gameId")
+    game_id: Optional[str] = Field(None, alias="gameId")
     bet_type: BetType = Field(alias="betType")
     amount_to_place: Decimal = Field(alias="amountToPlace")
     odds: Decimal
     betting_line: Optional[Decimal] = Field(None, alias="bettingLine")
+    home_team: Optional[str] = Field(None, alias="homeTeam")
+    away_team: Optional[str] = Field(None, alias="awayTeam")
+    game_date: Optional[str] = Field(None, alias="gameDate")
 
     class Config:
         alias_generator = to_camel
@@ -32,6 +35,9 @@ class PlaceBetRequest(BaseModel):
                 "amountToPlace": 100.00,
                 "odds": -110,
                 "bettingLine": 12.5,
+                "homeTeam": "Orlando Magic",
+                "awayTeam": "Atlanta Hawks",
+                "game_date": "2025-04-15",
             }
         }
 

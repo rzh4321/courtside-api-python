@@ -1,13 +1,14 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
-from datetime import datetime, timezone
-from typing import List, Optional
+from sqlalchemy import and_, desc
+from datetime import datetime, timedelta
+from typing import List, Optional, Dict
 from app.models.game import Game
 from app.models.bet import Bet
 from app.crud.bet import BetCRUD
+from app.schemas.game import CurrentGameBettingInfos, GameResponse
 import logging
 import aiohttp
-import ssl
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -53,16 +54,21 @@ class GameCRUD:
         return game
 
     @staticmethod
+    def mark_game_ended(db: Session, game_id: str) -> bool:
+        game = GameCRUD.get_by_game_id(game_id)
+        if game:
+            game.has_ended = True
+            return True
+        return False
+
+    @staticmethod
     async def get_boxscore(game_id: str):
         """Fetch boxscore data from NBA API"""
         host = "https://cdn.nba.com"
         url = f"{host}/static/json/liveData/boxscore/boxscore_{game_id}.json"
 
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, ssl=ssl_context) as response:
+            async with session.get(url) as response:
                 if response.status != 200:
                     logger.error(
                         f"Failed to fetch boxscore for game_id {game_id}: Status {response.status}"
@@ -102,3 +108,69 @@ class GameCRUD:
             for bet in bets:
                 BetCRUD.process_bet(db, bet, home_team_stats, away_team_stats)
         return game
+
+    @staticmethod
+    def get_todays_odds(db: Session) -> CurrentGameBettingInfos:
+        logger.info("IN TODAY ENDPOINT")
+
+        eastern = pytz.timezone("US/Eastern")
+        today_est = datetime.now(eastern).date()
+
+        # Get the most recent date from the Game table
+        most_recent_game = db.query(Game).order_by(desc(Game.game_date)).first()
+
+        if not most_recent_game:
+            # no games in the database (should never happen)
+            return CurrentGameBettingInfos(root={"no_games": []})
+
+        most_recent_date = most_recent_game.game_date.date()
+
+        # Create response dictionary with dates as keys and game lists as values
+        response_dict: Dict[str, List[GameResponse]] = {}
+
+        # Only include most_recent_date if it's today or in the future (in EST)
+        if most_recent_date >= today_est:
+            # Get all games that haven't ended from the most recent date
+            most_recent_date_games = (
+                db.query(Game)
+                .filter(
+                    and_(Game.game_date == most_recent_date, Game.has_ended == False)
+                )
+                .all()
+            )
+
+            most_recent_date_str = most_recent_date.strftime("%Y-%m-%d")
+
+            if most_recent_date_games:
+                response_dict[most_recent_date_str] = [
+                    GameResponse.model_validate(game) for game in most_recent_date_games
+                ]
+
+        # Calculate yesterday's date based on the most recent date
+        # (regardless of whether most_recent_date is included in the response)
+        yesterdays_date = most_recent_date - timedelta(days=1)
+
+        # Get all games from yesterday that haven't ended
+        # This is for getting "yesterdays" games that are ongoing when it's like 12:30 AM
+        yesterdays_games = (
+            db.query(Game)
+            .filter(Game.game_date == yesterdays_date, Game.has_ended == False)
+            .all()
+        )
+
+        # Add yesterday's games if any exist
+        if yesterdays_games:
+            yesterdays_date_str = yesterdays_date.strftime("%Y-%m-%d")
+            response_dict[yesterdays_date_str] = [
+                GameResponse.model_validate(game) for game in yesterdays_games
+            ]
+
+        # Ensure we have at least one date key
+        if not response_dict:
+            logger.info("No games found for either date")
+            # If no games found for either date, return an empty result with today's date
+            today_str = today_est.strftime("%Y-%m-%d")
+            response_dict[today_str] = []
+        print(response_dict)
+
+        return CurrentGameBettingInfos(root=response_dict)

@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from datetime import datetime, date
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Dict, List
 from pydantic.alias_generators import to_camel
 
 
@@ -36,6 +36,10 @@ class GameResponse(BaseModel):
         populate_by_name = True  # This allows population using the field names
 
 
+class MarkGameEndedResponse(BaseModel):
+    success: bool
+
+
 class GameIdUpdateRequest(BaseModel):
     home_team: str
     away_team: str
@@ -61,3 +65,24 @@ class ProcessResponse(BaseModel):
     success: bool
     message: str
     game_id: str
+
+
+class ProcessResponse(BaseModel):
+    success: bool
+    message: str
+    game_id: str
+
+
+class CurrentGameBettingInfos(RootModel):
+    root: Dict[str, List[GameResponse]]
+
+    model_config = {"populate_by_name": True, "alias_generator": to_camel}
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if not self.root:
+            raise ValueError("At least one date key must exist")
+
+    @property
+    def dates(self) -> List[str]:
+        return list(self.root.keys())
