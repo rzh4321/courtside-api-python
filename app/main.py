@@ -7,7 +7,14 @@ from app.db.session import engine
 from app.api.v1.endpoints import games, auth, bets, websocket, odds
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+
+LOCAL_IP = os.getenv("LOCAL_IP")
+
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 # uvicorn app.main:app --reload
 # Configure logging
@@ -22,6 +29,7 @@ origins = [
     "https://nba-courtside.vercel.app",
     "http://52.15.214.190",
     "https://52.15.214.190",
+    LOCAL_IP,
 ]
 
 app.add_middleware(
