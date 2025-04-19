@@ -127,7 +127,7 @@ class GameCRUD:
 
         # Format the date as a string
         today_str = adjusted_date.strftime("%Y-%m-%d")
-        print(f'Today is {today_str}')
+        print(f"Today is {today_str}")
 
         # Get the most recent date from the Game table
         most_recent_game = db.query(Game).order_by(desc(Game.game_date)).first()
@@ -141,22 +141,19 @@ class GameCRUD:
         # Create response dictionary with dates as keys and game lists as values
         response_dict: Dict[str, List[GameResponse]] = {}
 
-
         # Get all games that haven't ended from the most recent date
         most_recent_date_games = (
             db.query(Game)
-            .filter(
-                and_(Game.game_date == most_recent_date, Game.has_ended == False)
-            )
+            .filter(and_(Game.game_date == most_recent_date, Game.has_ended == False))
             .all()
         )
 
         most_recent_date_str = most_recent_date.strftime("%Y-%m-%d")
 
         if most_recent_date_games:
-            response_dict[most_recent_date_str if most_recent_date_str != today_str else "Today"] = [
-                GameResponse.model_validate(game) for game in most_recent_date_games
-            ]
+            response_dict[
+                most_recent_date_str if most_recent_date_str != today_str else "Today"
+            ] = [GameResponse.model_validate(game) for game in most_recent_date_games]
 
         # Get all games from yesterday that haven't ended
         yesterdays_games = (

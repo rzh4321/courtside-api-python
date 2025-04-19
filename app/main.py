@@ -4,7 +4,7 @@ from sqlalchemy import text
 from app.db.session import get_db
 from app.db.base import Base
 from app.db.session import engine
-from app.api.v1.endpoints import games, auth, bets, websocket, odds
+from app.api.v1.endpoints import games, auth, bets, websocket, odds, user
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -45,7 +45,9 @@ app.add_middleware(
 app.include_router(games.router, prefix="/api/games", tags=["games"])
 app.include_router(bets.router, prefix="/api/bets", tags=["bets"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(user.router, prefix="/api/user", tags=["user"])
 app.include_router(odds.router, prefix="/api", tags=["odds"])
+
 
 app.include_router(websocket.router)
 

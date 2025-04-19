@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, String, DateTime, ARRAY, func
+from sqlalchemy import Column, BigInteger, String, DateTime, func, Numeric
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.base import Base
@@ -16,10 +16,10 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    amount_deposited = Column(BigInteger, default=0, nullable=False)
-    balance = Column(BigInteger, default=0, nullable=False)
-    amount_placed = Column(BigInteger, default=0, nullable=False)
-    amount_won = Column(BigInteger, default=0, nullable=False)
+    amount_deposited = Column(Numeric(10, 2), default=0, nullable=False)
+    balance = Column(Numeric(10, 2), default=0, nullable=False)
+    amount_placed = Column(Numeric(10, 2), default=0, nullable=False)
+    amount_won = Column(Numeric(10, 2), default=0, nullable=False)
     bets_placed = Column(BigInteger, default=0, nullable=False)
     bets_won = Column(BigInteger, default=0, nullable=False)
 

@@ -4,7 +4,7 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from app.core.security import SECRET_KEY, ALGORITHM
 from app.db.session import get_db
-from app.crud.user import get_user_by_username
+from app.crud.user import UserCRUD
 from typing import Optional
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
@@ -26,7 +26,7 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    user = get_user_by_username(db, username)
+    user = UserCRUD.get_user_by_username(db, username)
     if user is None:
         raise credentials_exception
     return user

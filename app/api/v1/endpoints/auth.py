@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.security import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
-from app.crud.user import authenticate_user, create_user
+from app.crud.user import UserCRUD
 from app.core.auth import get_current_user
 from app.db.session import get_db
 from app.schemas.auth import AuthResponse, UserCreate, UserLogin, UserResponse
@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.post("/login", response_model=AuthResponse)
 async def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    user = authenticate_user(db, credentials.username, credentials.password)
+    user = UserCRUD.authenticate_user(db, credentials.username, credentials.password)
     print(f"user is {user}")
     if not user:
         raise HTTPException(
@@ -31,7 +31,9 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
 
 @router.post("/register", response_model=AuthResponse)
 async def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
-    user, access_token = create_user(db, user_data.username, user_data.password)
+    user, access_token = UserCRUD.create_user(
+        db, user_data.username, user_data.password
+    )
     return {"token": access_token, "user": user}
 
 
