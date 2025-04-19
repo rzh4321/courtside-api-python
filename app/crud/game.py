@@ -114,7 +114,20 @@ class GameCRUD:
         logger.info("IN TODAY ENDPOINT")
 
         eastern = pytz.timezone("US/Eastern")
-        today_est = datetime.now(eastern).date()
+        today_est = datetime.now(eastern)
+        # Subtract 2 hours (if its 1:45 AM April 20, it becomes 11:45 PM April 19)
+        # This is for getting "yesterdays" games that are ongoing when it's like 12:30 AM
+        adjusted_time = today_est - timedelta(hours=2)
+        yesterday_time = adjusted_time - timedelta(days=1)
+
+        # Get the date from the adjusted time
+        adjusted_date = adjusted_time.date()
+        yesterday_date = yesterday_time.date()
+        yesterday_str = yesterday_date.strftime("%Y-%m-%d")
+
+        # Format the date as a string
+        today_str = adjusted_date.strftime("%Y-%m-%d")
+        print(f'Today is {today_str}')
 
         # Get the most recent date from the Game table
         most_recent_game = db.query(Game).order_by(desc(Game.game_date)).first()
@@ -128,49 +141,41 @@ class GameCRUD:
         # Create response dictionary with dates as keys and game lists as values
         response_dict: Dict[str, List[GameResponse]] = {}
 
-        # Only include most_recent_date if it's today or in the future (in EST)
-        if most_recent_date >= today_est:
-            # Get all games that haven't ended from the most recent date
-            most_recent_date_games = (
-                db.query(Game)
-                .filter(
-                    and_(Game.game_date == most_recent_date, Game.has_ended == False)
-                )
-                .all()
+
+        # Get all games that haven't ended from the most recent date
+        most_recent_date_games = (
+            db.query(Game)
+            .filter(
+                and_(Game.game_date == most_recent_date, Game.has_ended == False)
             )
+            .all()
+        )
 
-            most_recent_date_str = most_recent_date.strftime("%Y-%m-%d")
+        most_recent_date_str = most_recent_date.strftime("%Y-%m-%d")
 
-            if most_recent_date_games:
-                response_dict[most_recent_date_str] = [
-                    GameResponse.model_validate(game) for game in most_recent_date_games
-                ]
-
-        # Calculate yesterday's date based on the most recent date
-        # (regardless of whether most_recent_date is included in the response)
-        yesterdays_date = most_recent_date - timedelta(days=1)
+        if most_recent_date_games:
+            response_dict[most_recent_date_str if most_recent_date_str != today_str else "Today"] = [
+                GameResponse.model_validate(game) for game in most_recent_date_games
+            ]
 
         # Get all games from yesterday that haven't ended
-        # This is for getting "yesterdays" games that are ongoing when it's like 12:30 AM
         yesterdays_games = (
             db.query(Game)
-            .filter(Game.game_date == yesterdays_date, Game.has_ended == False)
+            .filter(Game.game_date == yesterday_date, Game.has_ended == False)
             .all()
         )
 
         # Add yesterday's games if any exist
         if yesterdays_games:
-            yesterdays_date_str = yesterdays_date.strftime("%Y-%m-%d")
-            response_dict[yesterdays_date_str] = [
+            response_dict[yesterday_str] = [
                 GameResponse.model_validate(game) for game in yesterdays_games
             ]
 
         # Ensure we have at least one date key
         if not response_dict:
-            logger.info("No games found for either date")
-            # If no games found for either date, return an empty result with today's date
-            today_str = today_est.strftime("%Y-%m-%d")
-            response_dict[today_str] = []
-        print(response_dict)
+            logger.info("No games found")
+            # If no games found (eg. offseason), return an empty result
+            return CurrentGameBettingInfos(root={"no_games": []})
+        # print(response_dict)
 
         return CurrentGameBettingInfos(root=response_dict)
