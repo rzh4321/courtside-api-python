@@ -7,6 +7,11 @@ from datetime import timedelta
 from fastapi import HTTPException
 from app.core.security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
 from decimal import Decimal
+from app.models.bet import Bet
+from app.models.game import Game
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UserCRUD:

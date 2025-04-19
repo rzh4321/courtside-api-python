@@ -15,12 +15,16 @@ logger = logging.getLogger(__name__)
 class BetCRUD:
     @staticmethod
     def get_user_bets(db: Session, user_id: int) -> list[Bet]:
-        return (
+        bets = (
             db.query(Bet)
             .filter(Bet.user_id == user_id)
             .order_by(Bet.placed_at.desc())
             .all()
         )
+        for bet in bets:
+            game = db.query(Game).filter(bet.game_id == Game.id).first()
+            print(game)
+        return bets
 
     @staticmethod
     def create_bet(db: Session, user_id: int, request: PlaceBetRequest) -> Bet:
