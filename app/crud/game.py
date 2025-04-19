@@ -110,26 +110,47 @@ class GameCRUD:
         return game
 
     @staticmethod
+    def get_ordinal(n):
+        if 11 <= n % 100 <= 13:
+            return f"{n}th"
+        else:
+            return f"{n}{['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)]}"
+
+    @staticmethod
+    def get_date_display_str(date_str: str, today_str: str, tomorrow_str: str) -> str:
+        if date_str == today_str:
+            display_str = "Today"
+        elif date_str == tomorrow_str:
+            display_str = "Tomorrow"
+        else:
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            display_str = (
+                f"{date_obj.strftime('%B')} {GameCRUD.get_ordinal(date_obj.day)}"
+            )
+        return display_str
+
+    @staticmethod
     def get_todays_odds(db: Session) -> CurrentGameBettingInfos:
         logger.info("IN TODAY ENDPOINT")
 
         eastern = pytz.timezone("US/Eastern")
         today_est = datetime.now(eastern)
         # Subtract 2 hours (if its 1:45 AM April 20, it becomes 11:45 PM April 19)
-        # This is for getting "yesterdays" games that are ongoing when it's like 12:30 AM
+        # This is for considering "yesterdays" games that are ongoing when it's like 12:30 AM, as today's games
         adjusted_time = today_est - timedelta(hours=2)
-        yesterday_time = adjusted_time - timedelta(days=1)
+        tomorrow_time = adjusted_time + timedelta(days=1)
 
         # Get the date from the adjusted time
         adjusted_date = adjusted_time.date()
-        yesterday_date = yesterday_time.date()
-        yesterday_str = yesterday_date.strftime("%Y-%m-%d")
+        tomorrow_date = tomorrow_time.date()
+
+        tomorrow_str = tomorrow_date.strftime("%Y-%m-%d")
 
         # Format the date as a string
         today_str = adjusted_date.strftime("%Y-%m-%d")
-        print(f"Today is {today_str}")
 
         # Get the most recent date from the Game table
+        # this could be either today's games, tomorrow's games, or a future date
         most_recent_game = db.query(Game).order_by(desc(Game.game_date)).first()
 
         if not most_recent_game:
@@ -137,11 +158,23 @@ class GameCRUD:
             return CurrentGameBettingInfos(root={"no_games": []})
 
         most_recent_date = most_recent_game.game_date.date()
+        next_most_recent_game = (
+            db.query(Game)
+            .filter(Game.game_date < most_recent_date)
+            .order_by(desc(Game.game_date))
+            .limit(1)
+            .first()
+        )
+
+        next_most_recent_date = next_most_recent_game.game_date.date()
+        next_most_recent_date_str = next_most_recent_date.strftime("%Y-%m-%d")
 
         # Create response dictionary with dates as keys and game lists as values
         response_dict: Dict[str, List[GameResponse]] = {}
 
         # Get all games that haven't ended from the most recent date
+        # if most_recent_date not today's date, this just gets all games
+        # from most recent date
         most_recent_date_games = (
             db.query(Game)
             .filter(and_(Game.game_date == most_recent_date, Game.has_ended == False))
@@ -149,23 +182,32 @@ class GameCRUD:
         )
 
         most_recent_date_str = most_recent_date.strftime("%Y-%m-%d")
+        logger.info(f"most recent game date is {most_recent_date_str}")
 
+        most_recent_date_display_str = GameCRUD.get_date_display_str(
+            most_recent_date_str, today_str, tomorrow_str
+        )
         if most_recent_date_games:
-            response_dict[
-                most_recent_date_str if most_recent_date_str != today_str else "Today"
-            ] = [GameResponse.model_validate(game) for game in most_recent_date_games]
+            response_dict[most_recent_date_display_str] = [
+                GameResponse.model_validate(game) for game in most_recent_date_games
+            ]
 
-        # Get all games from yesterday that haven't ended
-        yesterdays_games = (
+        # Get all games prior to most_recent_date that haven't ended
+        # this is only applicable if most_recent_date is not today--either tomorrow or another future date
+        # if most_recent_date is today (includes up to 2AM), then all games prior to today should've
+        # ended, so this returns an empty result
+        next_most_recent_games = (
             db.query(Game)
-            .filter(Game.game_date == yesterday_date, Game.has_ended == False)
+            .filter(Game.game_date == next_most_recent_date, Game.has_ended == False)
             .all()
         )
 
-        # Add yesterday's games if any exist
-        if yesterdays_games:
-            response_dict[yesterday_str] = [
-                GameResponse.model_validate(game) for game in yesterdays_games
+        if next_most_recent_games:
+            next_most_recent_date_display_str = GameCRUD.get_date_display_str(
+                next_most_recent_date_str, today_str, tomorrow_str
+            )
+            response_dict[next_most_recent_date_display_str] = [
+                GameResponse.model_validate(game) for game in next_most_recent_games
             ]
 
         # Ensure we have at least one date key
@@ -173,6 +215,5 @@ class GameCRUD:
             logger.info("No games found")
             # If no games found (eg. offseason), return an empty result
             return CurrentGameBettingInfos(root={"no_games": []})
-        # print(response_dict)
 
         return CurrentGameBettingInfos(root=response_dict)
