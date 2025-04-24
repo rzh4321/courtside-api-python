@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import get_db
-from app.schemas.bet import BetResponse, PlaceBetRequest
+from app.schemas.bet import BetResponse, PlaceBetRequest, UserBetWithGameInfo
 from app.crud.bet import BetCRUD
 from app.core.auth import get_current_user
 from app.models.user import User
@@ -10,7 +10,7 @@ from app.models.user import User
 router = APIRouter()
 
 
-@router.get("", response_model=List[BetResponse])
+@router.get("", response_model=List[UserBetWithGameInfo])
 def get_current_user_bets(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):

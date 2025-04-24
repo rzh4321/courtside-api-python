@@ -15,6 +15,29 @@ class BetType(str, Enum):
     UNDER = "UNDER"
 
 
+class UserBetWithGameInfo(BaseModel):
+    id: int
+    user_id: int
+    game_id: int
+    bet_type: BetType
+    odds: Decimal
+    amount_placed: Decimal
+    total_payout: Decimal
+    placed_at: datetime
+    status: str
+    betting_line: Optional[Decimal]
+
+    # Extra fields from Game
+    home_team: str
+    away_team: str
+    game_date: datetime
+
+    class Config:
+        from_attributes = True
+        alias_generator = to_camel
+        populate_by_name = True
+
+
 class PlaceBetRequest(BaseModel):
     game_id: Optional[str] = Field(None, alias="gameId")
     bet_type: BetType = Field(alias="betType")

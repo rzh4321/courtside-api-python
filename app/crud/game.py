@@ -31,7 +31,7 @@ class GameCRUD:
     def get_by_teams_and_date(
         db: Session, home_team: str, away_team: str, game_date: datetime
     ) -> Optional[Game]:
-        print(f"Finding game: {home_team} AT {away_team} ON {game_date}")
+        # print(f"Finding game: {home_team} AT {away_team} ON {game_date}")
         return (
             db.query(Game)
             .filter(

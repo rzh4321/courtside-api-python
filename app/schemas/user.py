@@ -4,6 +4,7 @@ from datetime import datetime
 from .bet import BetResponse
 from typing import List
 
+
 class DepositRequest(BaseModel):
     amount: float
 

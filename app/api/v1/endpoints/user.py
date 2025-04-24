@@ -17,10 +17,3 @@ def deposit(
     db: Session = Depends(get_db),
 ):
     return {"success": UserCRUD.deposit(db, current_user.username, request.amount)}
-
-@router.get("/", response_model=BetsResponse)
-def get_user_bets(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return {"bets": UserCRUD.get_user_bets(db, current_user.username)}

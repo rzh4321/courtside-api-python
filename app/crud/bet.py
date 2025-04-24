@@ -5,7 +5,7 @@ from datetime import datetime
 from app.models.bet import Bet
 from app.models.game import Game
 from app.models.user import User
-from app.schemas.bet import PlaceBetRequest, Team
+from app.schemas.bet import PlaceBetRequest, Team, UserBetWithGameInfo
 from fastapi import HTTPException
 import logging
 
@@ -14,17 +14,35 @@ logger = logging.getLogger(__name__)
 
 class BetCRUD:
     @staticmethod
-    def get_user_bets(db: Session, user_id: int) -> list[Bet]:
+    def get_user_bets(db: Session, user_id: int) -> list[UserBetWithGameInfo]:
         bets = (
             db.query(Bet)
             .filter(Bet.user_id == user_id)
             .order_by(Bet.placed_at.desc())
             .all()
         )
+        result = []
         for bet in bets:
-            game = db.query(Game).filter(bet.game_id == Game.id).first()
-            print(game)
-        return bets
+            game = db.query(Game).filter(Game.id == bet.game_id).first()
+            if game:
+                bet_with_game_info = {
+                    "id": bet.id,
+                    "user_id": bet.user_id,
+                    "game_id": bet.game_id,
+                    "bet_type": bet.bet_type,
+                    "odds": float(bet.odds),
+                    "amount_placed": bet.amount_placed,
+                    "total_payout": bet.total_payout,
+                    "placed_at": bet.placed_at,
+                    "status": bet.status,
+                    "betting_line": bet.betting_line if bet.betting_line else None,
+                    "home_team": game.home_team,
+                    "away_team": game.away_team,
+                    "game_date": game.game_date,
+                }
+                result.append(UserBetWithGameInfo.model_validate(bet_with_game_info))
+
+        return result
 
     @staticmethod
     def create_bet(db: Session, user_id: int, request: PlaceBetRequest) -> Bet:
@@ -155,6 +173,7 @@ class BetCRUD:
             user.balance += bet.total_payout
             bet.status = "WON"
             logger.info(f"BET WON: User {user.id} won {bet.total_payout}")
+            # TODO: send websocket message to react to update user context stats
         else:
             bet.status = "LOST"
             logger.info(f"BET LOST: {bet.bet_type}")
