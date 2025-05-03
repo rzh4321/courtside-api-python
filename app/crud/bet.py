@@ -28,7 +28,7 @@ class BetCRUD:
                 bet_with_game_info = {
                     "id": bet.id,
                     "user_id": bet.user_id,
-                    "game_id": bet.game_id,
+                    "game_id": game.game_id,
                     "bet_type": bet.bet_type,
                     "odds": float(bet.odds),
                     "amount_placed": bet.amount_placed,
@@ -111,6 +111,7 @@ class BetCRUD:
         logger.info(f"THIS WAS PLACED BY USER {user}")
 
         bet_won = False
+        push = False
 
         if bet.bet_type == "SPREAD_HOME":
             logger.info(f"IT BET ON SPREAD HOME, {home_team_name} {bet.betting_line}")
@@ -144,6 +145,9 @@ class BetCRUD:
             if total_score > bet.betting_line:
                 logger.info(f"OVER HIT: {total_score} > {bet.betting_line}")
                 bet_won = True
+            elif total_score == bet.betting_line:
+                logger.info(f"SCORE EQUALS LINE. PUSH")
+                push = True
 
         elif bet.bet_type == "UNDER":
             logger.info(f"IT BET ON UNDER {bet.betting_line}")
@@ -151,6 +155,9 @@ class BetCRUD:
             if total_score < bet.betting_line:
                 logger.info(f"UNDER HIT: {total_score} < {bet.betting_line}")
                 bet_won = True
+            elif total_score == bet.betting_line:
+                logger.info(f"SCORE EQUALS LINE. PUSH")
+                push = True
 
         elif bet.bet_type == "MONEYLINE_HOME":
             logger.info(f"IT BET ON MONEYLINE HOME, {home_team_name}")
@@ -174,6 +181,10 @@ class BetCRUD:
             bet.status = "WON"
             logger.info(f"BET WON: User {user.id} won {bet.total_payout}")
             # TODO: send websocket message to react to update user context stats
+        elif push:
+            bet.status = "PUSH"
+            logger.info(f"BET IS A PUSH: {bet.bet_type}")
+            user.balance += bet.amount_placed
         else:
             bet.status = "LOST"
             logger.info(f"BET LOST: {bet.bet_type}")

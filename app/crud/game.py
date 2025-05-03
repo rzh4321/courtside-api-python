@@ -9,6 +9,7 @@ from app.schemas.game import CurrentGameBettingInfos, GameResponse
 import logging
 import aiohttp
 import pytz
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -158,57 +159,40 @@ class GameCRUD:
             return CurrentGameBettingInfos(root={"no_games": []})
 
         most_recent_date = most_recent_game.game_date.date()
-        next_most_recent_game = (
+
+        # If the most recent date is before today, return nothing
+        if most_recent_date < adjusted_date:
+            return CurrentGameBettingInfos(root={"no_games": []})
+
+        # Query all games from today (adjusted_date) to most recent date that have not ended
+        games_in_range = (
             db.query(Game)
-            .filter(Game.game_date < most_recent_date)
-            .order_by(desc(Game.game_date))
-            .limit(1)
-            .first()
-        )
-
-        next_most_recent_date = next_most_recent_game.game_date.date()
-        next_most_recent_date_str = next_most_recent_date.strftime("%Y-%m-%d")
-
-        # Create response dictionary with dates as keys and game lists as values
-        response_dict: Dict[str, List[GameResponse]] = {}
-
-        # Get all games that haven't ended from the most recent date
-        # if most_recent_date not today's date, this just gets all games
-        # from most recent date
-        most_recent_date_games = (
-            db.query(Game)
-            .filter(and_(Game.game_date == most_recent_date, Game.has_ended == False))
+            .filter(
+                and_(
+                    Game.game_date >= adjusted_date,
+                    Game.game_date <= most_recent_date,
+                    Game.has_ended == False,
+                )
+            )
+            .order_by(Game.game_date)
             .all()
         )
+
+        if not games_in_range:
+            return CurrentGameBettingInfos(root={"no_games": []})
 
         most_recent_date_str = most_recent_date.strftime("%Y-%m-%d")
         logger.info(f"most recent game date is {most_recent_date_str}")
 
-        most_recent_date_display_str = GameCRUD.get_date_display_str(
-            most_recent_date_str, today_str, tomorrow_str
-        )
-        if most_recent_date_games:
-            response_dict[most_recent_date_display_str] = [
-                GameResponse.model_validate(game) for game in most_recent_date_games
-            ]
+        # Create response dictionary with dates as keys and game lists as values
+        response_dict: Dict[str, List[GameResponse]] = defaultdict(list)
 
-        # Get all games prior to most_recent_date that haven't ended
-        # this is only applicable if most_recent_date is not today--either tomorrow or another future date
-        # if most_recent_date is today (includes up to 2AM), then all games prior to today should've
-        # ended, so this returns an empty result
-        next_most_recent_games = (
-            db.query(Game)
-            .filter(Game.game_date == next_most_recent_date, Game.has_ended == False)
-            .all()
-        )
-
-        if next_most_recent_games:
-            next_most_recent_date_display_str = GameCRUD.get_date_display_str(
-                next_most_recent_date_str, today_str, tomorrow_str
+        for game in games_in_range:
+            date_str = game.game_date.date().strftime("%Y-%m-%d")
+            display_str = GameCRUD.get_date_display_str(
+                date_str, today_str, tomorrow_str
             )
-            response_dict[next_most_recent_date_display_str] = [
-                GameResponse.model_validate(game) for game in next_most_recent_games
-            ]
+            response_dict[display_str].append(GameResponse.model_validate(game))
 
         # Ensure we have at least one date key
         if not response_dict:

@@ -18,7 +18,7 @@ class BetType(str, Enum):
 class UserBetWithGameInfo(BaseModel):
     id: int
     user_id: int
-    game_id: int
+    game_id: str
     bet_type: BetType
     odds: Decimal
     amount_placed: Decimal
