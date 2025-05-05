@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 class UserCRUD:
     @staticmethod
     def get_user_by_username(db: Session, username: str) -> Optional[User]:
-        return db.query(User).filter(User.username == username).first()
+        user = db.query(User).filter(User.username == username).first()
+        return user
 
     @staticmethod
     def deposit(db: Session, username: str, amount: float) -> bool:
@@ -27,7 +28,6 @@ class UserCRUD:
             user.amount_deposited += amount
             user.balance += amount
             db.commit()
-            print("succes")
             return True
         except Exception as e:
             print("exception caught in deposit: ", e)

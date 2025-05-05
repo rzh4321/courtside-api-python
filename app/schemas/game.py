@@ -31,7 +31,6 @@ class GameResponse(BaseModel):
     has_ended: bool = Field(alias="hasEnded")
 
     class Config:
-        orm_mode = True
         from_attributes = True
         populate_by_name = True  # This allows population using the field names
 
