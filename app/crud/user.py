@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.core.security import get_password_hash, verify_password
+from sqlalchemy import func
 from typing import Optional
 from sqlalchemy.exc import IntegrityError
 from datetime import timedelta
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 class UserCRUD:
     @staticmethod
     def get_user_by_username(db: Session, username: str) -> Optional[User]:
-        user = db.query(User).filter(User.username == username).first()
+        user = db.query(User).filter(func.lower(User.username) == username.lower()).first()
         return user
 
     @staticmethod

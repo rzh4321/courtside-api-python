@@ -14,7 +14,6 @@ router = APIRouter()
 @router.post("/login", response_model=AuthResponse)
 async def login(credentials: UserLogin, db: Session = Depends(get_db)):
     user = UserCRUD.authenticate_user(db, credentials.username, credentials.password)
-    print(f"user is {user}")
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -25,7 +24,6 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    print(f"acces token is {type(access_token)}")
     return {"token": access_token, "user": user}
 
 
